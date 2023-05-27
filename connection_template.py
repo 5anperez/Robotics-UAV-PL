@@ -25,6 +25,12 @@ def connectToDrone():
     # store ip here
     connection_string = args.connect
 
+    # if no ip was entered, then run a sitl instance
+    if not connection_string: 
+        import dronekit_sitl
+        sitl = dronekit_sitl.start_default()
+        connection_string = sitl.connection_string()
+
     # dronekit method to establish the connection
     vehicle = connect(connection_string, wait_ready = True)
 
