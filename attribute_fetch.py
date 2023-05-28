@@ -13,7 +13,7 @@ import argparse ## parse cmd args
 # creates a vehicle object, which is connected via ip, to represent the drone. 
 # the object allows mavlink commands and dronekit methods to be sent to the drone.  
 # usage: >> python connection_template.py --connect <drone's ip>
-def connectToDrone():
+def connectToDrone(initSitl):
 
     # parser object
     parser = argparse.ArgumentParser(description='commands')
@@ -26,7 +26,7 @@ def connectToDrone():
     connection_string = args.connect
 
     # if no ip was entered, then run a sitl instance
-    if not connection_string: 
+    if not connection_string and initSitl: 
         import dronekit_sitl
         sitl = dronekit_sitl.start_default()
         connection_string = sitl.connection_string()
@@ -86,8 +86,12 @@ def fetchAndPrintAttributes(vehicle):
 
 ############# MAIN #############
 
+# flag to initialize sitl instance 
+# (change to true for simulations)
+initSitl = False
+
 # connect to the drone
-vehicle = connectToDrone()
+vehicle = connectToDrone(initSitl)
 
 # print drone data
 fetchAndPrintAttributes(vehicle)
