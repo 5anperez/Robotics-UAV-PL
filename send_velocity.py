@@ -99,21 +99,26 @@ def takeoff(vehicle, targetHeight):
 
 
 
-# send movement commands
+# send velocity message (movement commands)
 def send_local_ned_velocity(vehicle, vx, vy, vz):
+    # MAVLink message in the drone's frame (local)
 	msg = vehicle.message_factory.set_position_target_local_ned_encode(
 		0,
 		0, 0,
 		mavutil.mavlink.MAV_FRAME_BODY_OFFSET_NED,
-		0b0000111111000111,
-		0, 0, 0,
-		vx, vy, vz,
-		0, 0, 0,
+		0b0000111111000111, # velocity bitmask
+		0, 0, 0,            # position
+		vx, vy, vz,         # velocity
+		0, 0, 0,            # acceleration
 		0, 0)
 	vehicle.send_mavlink(msg)
 	vehicle.flush()
 # send_local_ned_velocity()
 
+
+# NOTE: velocity commands must be resent every one second to keep
+# the drone in constant motion. sending one velocity message will
+# only move the drone for one second.
 
 
 # head north (+x), relative to drone
