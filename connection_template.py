@@ -38,8 +38,8 @@ def modeSetter(vehicle):
 
 # creates a vehicle object, which is connected via ip, to represent the drone. 
 # the object allows mavlink commands and dronekit methods to be sent to the drone.  
-# usage: >> python connection_template.py --connect <drone's ip>
-def connectToDrone(initSitl):
+# USAGE: >> python connection_template.py --connect <drone's ip>
+def connectToDrone():
 
     # parser object
     parser = argparse.ArgumentParser(description='commands')
@@ -51,8 +51,8 @@ def connectToDrone(initSitl):
     # store ip here
     connection_string = args.connect
 
-    # if no ip was entered, then run a sitl instance
-    if not connection_string and initSitl: 
+    # if --connect nor ip was entered, then run a sitl instance 
+    if not connection_string: 
         import dronekit_sitl
         sitl = dronekit_sitl.start_default()
         connection_string = sitl.connection_string()
@@ -68,11 +68,8 @@ def connectToDrone(initSitl):
 
 ############# MAIN #############
 
-# flag to initialize sitl instance 
-# (change to true for simulations)
-initSitl = False
 
-vehicle = connectToDrone(initSitl)
+vehicle = connectToDrone()
 
 # test the mode setter
 modeSetter(vehicle)

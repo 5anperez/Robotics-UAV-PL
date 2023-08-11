@@ -24,9 +24,14 @@ from dronekit import connect, VehicleMode, LocationGlobalRelative, APIException
 
 
 
-# init SITL
-def connectDrone():
-    vehicle = connect('udp:127.0.0.1:14551', wait_ready=True)
+# capable of launching and connecting to a virtual drone or the real thing
+def connectDrone(sitlInstance):
+
+    if sitlInstance:
+        vehicle = connect('udp:127.0.0.1:14550', wait_ready=True)
+    else:
+        vehicle = connect('/dev/ttyAMA0', baud = 57600, wait_ready = True)
+
     return vehicle
 
 
@@ -133,6 +138,13 @@ def send_local_ned_velocity(vehicle, vx, vy, vz):
 # only move the drone for one second.
 
 
+# NOTE: if 'RNG' in the SITL console is greyed out, then it hasnt
+# been enabled! to enable, do: 
+#           param set RNGFND1_TYPE 100
+#           reboot
+# in the terminal running MAVProxy. it should turn green
+
+
 # head north (+x), relative to drone
 def moveForward(vehicle):
     i = 0   # each iteration moves the drone
@@ -177,8 +189,11 @@ def moveRight(vehicle):
 
 if __name__=='__main__':
 
+    # set to false when field testing the real thing
+    sitlInstance = True
+
     # connect to the drone
-    vehicle = connectDrone()
+    vehicle = connectDrone(sitlInstance)
 
     # print drone data
     #fetchAndPrintAttributes(vehicle)
@@ -208,7 +223,6 @@ if __name__=='__main__':
     moveBackwards(vehicle)
     moveLeft(vehicle)
     moveRight(vehicle)
-    #moveBackwards(vehicle)
 
     # land the drone (and dont change altitude)
     vehicle.parameters['RTL_ALT'] = 0

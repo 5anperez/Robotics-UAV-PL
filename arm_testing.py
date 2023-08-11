@@ -12,7 +12,7 @@ from pymavlink import mavutil
 
 
 
-# returns a vehicle object that represents the drone and establishes the connection
+# returns a vehicle object that represents the REAL drone and establishes the connection
 def connectDrone():
     vehicle = connect('/dev/ttyAMA0', baud = 57600, wait_ready = True)
     return vehicle
@@ -168,15 +168,4 @@ if __name__=='__main__':
     switchMode(vehicle, flightMode0)
 
     vehicle.close()
-
-    # try:
-    #     arm()
-    #     time.sleep(2)
-    #     vehicle.mode = VehicleMode("LAND")
-    #     while vehicle.mode!='LAND':
-    #         time.sleep(1)
-    #         print("Waiting for drone to land")
-    #     time.sleep(1)
-    # except:
-    #     pass
 

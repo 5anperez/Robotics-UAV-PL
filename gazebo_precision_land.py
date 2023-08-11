@@ -30,19 +30,13 @@ from array import array
 # init connection to sitl 
 vehicle = connect('udp:127.0.0.1:14551', wait_ready=True)
 
-# specify precision landing params
-vehicle.parameters['PLND_ENABLED'] = 1
+# precision land params
+vehicle.parameters['PLND_ENABLED'] = 1    # enable PL
+vehicle.parameters['PLND_TYPE'] = 1       # companion computer mode
+vehicle.parameters['PLND_EST_TYPE'] = 0   # disable EKF (use camera only)
+vehicle.parameters['LAND_SPEED'] = 30     # landing speed (cm/sec)
 
-# activate the companion computer
-vehicle.parameters['PLND_TYPE'] = 1
-
-# disable EKF (use camera only)
-vehicle.parameters['PLND_EST_TYPE'] = 0
-
-# drone landing speed in cm/sec
-vehicle.parameters['LAND_SPEED'] = 30
-
-# required range finder params
+# range finder params
 vehicle.parameters['RNGFND1_TYPE'] = 1
 vehicle.parameters['RNGFND1_MIN_CM'] = 0
 vehicle.parameters['RNGFND1_MAX_CM'] = 4000
@@ -50,8 +44,8 @@ vehicle.parameters['RNGFND1_PIN'] = 0
 vehicle.parameters['RNGFND1_SCALING'] = 12.12
 
 # movement params
-velocity = 0.5 # m/s
-takeoff_height = 4 # 4m = 13.12ft
+velocity = 0.5      # m/s
+takeoff_height = 4  # 4m = 13.12ft
 
 
 
