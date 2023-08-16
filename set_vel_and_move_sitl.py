@@ -285,8 +285,10 @@ def moveForward(vehicle, velocity, duration):
 # head south (-x), relative to drone
 def moveBackwards(vehicle, velocity, duration):
     i = 0   # each iteration moves the drone
-    while (i < (duration/2)):
-        forward_backwards_velocity(vehicle, -velocity, 0, 0)
+    velocity = (-1 * velocity)
+    print "I am going", velocity, "mph now..."
+    while (i < duration):
+        forward_backwards_velocity(vehicle, velocity, 0, 0)
         print "Moving backwards now!"
         time.sleep(2)
         i += 1
@@ -294,7 +296,7 @@ def moveBackwards(vehicle, velocity, duration):
 # head west (-y), relative to drone
 def moveLeft(vehicle, velocity, duration):
     i = 0   # each iteration moves the drone
-    while (i < (duration/2)):
+    while (i < duration):
         side_to_side_velocity(vehicle, 0, -velocity, 0)
         print "Moving to the left, now!"
         time.sleep(2)
@@ -330,7 +332,7 @@ def moveForward_G(vehicle, velocity, duration):
 # head south (-x), relative to Earth
 def moveBackwards_G(vehicle, velocity, duration):
     i = 0   # each iteration moves the drone
-    while (i < (duration/2)):
+    while (i < duration):
         send_global_ned_velocity(vehicle, -velocity, 0, 0)
         print "Moving backwards now!"
         time.sleep(2)
@@ -339,7 +341,7 @@ def moveBackwards_G(vehicle, velocity, duration):
 # head west (-y), relative to Earth
 def moveLeft_G(vehicle, velocity, duration):
     i = 0   # each iteration moves the drone
-    while (i < (duration/2)):
+    while (i < duration):
         send_global_ned_velocity(vehicle, 0, -velocity, 0)
         print "Moving to the left, now!"
         time.sleep(2)
@@ -374,6 +376,27 @@ def cross_maneuver(vehicle, velocity, duration):
 
 
 
+def forward_and_right(vehicle, velocity, duration):
+
+    print "Performing the Forward-and-Right Maneuver now..."
+
+    moveForward(vehicle, velocity, duration)
+
+
+
+def move_forward_then_backwards(vehicle, velocity, duration):
+
+    print "Performing a forwards, then backwards sequence now..."
+
+    print "Moving forward for", duration, "seconds"
+    moveForward(vehicle, velocity, duration)
+    time.sleep(5)
+
+    backwardsDuration = duration/2
+    print "Now, I will move backwards for", backwardsDuration, "seconds"
+    moveBackwards(vehicle, velocity, backwardsDuration)
+    time.sleep(5)
+
 
 
 
@@ -389,7 +412,7 @@ if __name__=='__main__':
     # YOU SHOULD PUT A TRY-CATCH BLOCK HERE! (PER DK DOC)
 
     # set to false when field testing the real thing
-    sitlInstance = True
+    sitlInstance = False
 
     # connect to the drone
     vehicle = connectToDrone(sitlInstance)
@@ -413,22 +436,24 @@ if __name__=='__main__':
     setMode(vehicle, flightMode0)
 
     # in meters
-    desiredHeight = 5
+    desiredHeight = 2
 
-    desiredVelocity = 5
+    desiredVelocity = 2
 
     # Controls how long the movement lasts
     # NOTE: Set even numbers for simplicity
-    desiredTravelDistance = 12
+    desiredTravelDistance = 6
 
 
     # elevate and hover
     takeoff(vehicle, desiredHeight)
 
+    move_forward_then_backwards(vehicle, desiredVelocity, desiredTravelDistance)
+
+    
+    '''
     # Cross maneuver in the local frame
     cross_maneuver(vehicle, desiredVelocity, desiredTravelDistance)
-    '''
-    
     '''
 
     # Now we try the same manuevers in the global frame
@@ -465,10 +490,11 @@ if __name__=='__main__':
     time.sleep(7)
     '''
     
-
-    time.sleep(5)
+    print "Sleeping for 20 seconds before I come home..."
+    time.sleep(20)
 
     # land the drone (and dont change altitude)
+    print "Enabling RTL now..."
     vehicle.parameters['RTL_ALT'] = 0
     setMode(vehicle, flightMode6)
 
