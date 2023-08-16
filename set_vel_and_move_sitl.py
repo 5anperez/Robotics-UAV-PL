@@ -135,6 +135,61 @@ def takeoff(vehicle, targetHeight):
 
 
 
+def condition_yaw(vehicle, degrees, relative):
+
+    # Establish the frame
+    if relative:
+        isRelative = 1      # Relative to direction of travel
+    else: 
+        isRelative = 0      # Uses absolute angles
+
+    msg = vehicle.message_factory.command_long_encode(
+        0, 0,                                   #
+        mavutil.mavlink.MAV_CMD_CONDITION_YAW,  #
+        0,                                      #
+        degrees,
+        0,
+        1,
+        isRelative,
+        0, 0, 0
+    )
+
+    vehicle.send_mavlink(msg)
+    vehicle.flush()
+
+
+
+
+def yaw_init(vehicle):
+
+    lat = vehicle.location.global_relative_frame.lat
+    lon = vehicle.location.global_relative_frame.lon
+    alt = vehicle.location.global_relative_frame.alt
+
+    location = LocationGlobalRelative(lat, lon, alt)
+
+    msg = vehicle.message_factory.set_position_target_global_int_encode(
+        0,
+        0, 0,
+        mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT_INT,  # frame
+        0b0000111111111000,                                 # type_mask w/ speed enabled
+        location.lat*1e7,                                   # x position
+        location.lon*1e7,                                   # y position
+        location.alt,                                       # z position
+        0,                                                  # x velocity
+        0,                                                  # y velocity
+        0,                                                  # z velocity
+        0, 0, 0,                                            # acceleration
+        0, 0                                                # yaw_rate
+    )
+
+    vehicle.send_mavlink(msg)
+    vehicle.flush()
+
+
+
+
+
 # send velocity message (movement commands) in the drone's frame
 def send_local_ned_velocity(vehicle, vx, vy, vz):
         
@@ -297,18 +352,21 @@ if __name__=='__main__':
     setMode(vehicle, flightMode0)
 
     # in meters
-    desiredHeight = 4
+    desiredHeight = 10
 
     # elevate and hover
     takeoff(vehicle, desiredHeight)
 
     # Cross maneuver in the local frame
-    '''moveForward(vehicle)
+    '''
+    moveForward(vehicle)
     moveBackwards(vehicle)
     moveLeft(vehicle)
-    moveRight(vehicle)'''
+    moveRight(vehicle)
+    '''
 
     # Now we try the same manuevers in the global frame
+    '''
     print("Now entering the global frame!!!!!")
     print("Now entering the global frame!!!!!")
     print("Now entering the global frame!!!!!")
@@ -316,6 +374,26 @@ if __name__=='__main__':
     moveBackwards_G(vehicle)
     moveLeft_G(vehicle)
     moveRight_G(vehicle)
+    '''
+
+    # Trying yaw functionality
+    print("Now entering the YAW function!!!!!")
+    print("Now entering the YAW function!!!!!")
+    print("Now entering the YAW function!!!!!")
+    yaw_init(vehicle)
+    condition_yaw(vehicle, 30, True)
+    print('Yawing 30 degrees relative to current position!!!')
+    time.sleep(7)
+
+    condition_yaw(vehicle, 0, False)
+    print('Yawing true North!!!')
+    time.sleep(7)
+
+    condition_yaw(vehicle, 270, False)
+    print('Yawing true West!!!')
+    time.sleep(7)
+
+    time.sleep(20)
 
     # land the drone (and dont change altitude)
     vehicle.parameters['RTL_ALT'] = 0

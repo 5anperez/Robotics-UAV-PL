@@ -12,11 +12,17 @@ from pymavlink import mavutil
 
 
 
-# returns a vehicle object that represents the drone and establishes the connection
-def connectDrone():
-    vehicle = connect('/dev/ttyAMA0', baud = 57600, wait_ready = True)
-    return vehicle
+# Capable of launching and connecting to a virtual drone, or the real thing.
+# If sitlInstance = True, then connect to sitl, o/w connect to RPi + Pixhawk.
+def connectToDrone(sitlInstance):
 
+    if sitlInstance:
+        vehicle = connect('udp:127.0.0.1:14550', wait_ready=True)
+    else:
+        vehicle = connect('/dev/ttyAMA0', baud = 57600, wait_ready = True)
+
+    return vehicle
+# connectDrone()
 
 
 # arm the drone and start props
@@ -164,8 +170,10 @@ def movRight(vehicle):
 
 if __name__=='__main__':
 
+    sitlInstance = True
+
     # connect to the drone
-    vehicle = connectDrone()
+    vehicle = connectToDrone(sitlInstance)
 
     # print drone data
     #fetchAndPrintAttributes(vehicle)
@@ -192,8 +200,13 @@ if __name__=='__main__':
     takeoff(vehicle, desiredHeight)
 
     moveForward(vehicle)
+    time.sleep(5)
     moveLeft(vehicle)
-    #moveBackwards(vehicle)
+    time.sleep(5)
+    moveBackwards(vehicle)
+    time.sleep(5)
+    movRight(vehicle)
+    
 
     # land the drone
     setMode(vehicle, flightMode6)
