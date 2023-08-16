@@ -1,4 +1,5 @@
 from dronekit import connect, VehicleMode
+from pymavlink import mavutil
 import time
 
 def arm_and_takeoff(vehicle, target_altitude):
@@ -32,16 +33,17 @@ def send_local_ned_velocity(vehicle, vx, vy, vz, duration):
 
 def cross_maneuver(vehicle):
     print("Performing Cross Maneuver...")
-    send_local_ned_velocity(vehicle, 1, 0, 0, 5)  # Forward for 5 seconds
-    send_local_ned_velocity(vehicle, -1, 0, 0, 2) # Backward for 2 seconds
-    send_local_ned_velocity(vehicle, 0, -1, 0, 3) # Left for 3 seconds
-    send_local_ned_velocity(vehicle, 0, 1, 0, 6)  # Right for 6 seconds
-    send_local_ned_velocity(vehicle, 0, -1, 0, 3) # Left for 3 seconds
+    duration = 12
+    send_local_ned_velocity(vehicle, 1, 0, 0, duration)  # Forward for 5 seconds
+    send_local_ned_velocity(vehicle, -1, 0, 0, (duration/2)) # Backward for 2 seconds
+    send_local_ned_velocity(vehicle, 0, -1, 0, (duration/2)) # Left for 3 seconds
+    send_local_ned_velocity(vehicle, 0, 1, 0, duration)  # Right for 6 seconds
+    send_local_ned_velocity(vehicle, 0, -1, 0, (duration/2)) # Left for 3 seconds
     print("Cross Maneuver Complete!")
 
 def main():
-    connection_string = "YOUR_CONNECTION_STRING_HERE" # Replace with your connection string
-    vehicle = connect(connection_string, wait_ready=True)
+    
+    vehicle = connect('udp:127.0.0.1:14550', wait_ready=True)
     
     arm_and_takeoff(vehicle, 10) # 10 meters altitude
     cross_maneuver(vehicle)

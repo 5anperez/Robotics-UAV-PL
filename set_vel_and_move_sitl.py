@@ -48,20 +48,20 @@ def armDrone(vehicle):
 
         # Run pre-flight checks.
         while not vehicle.is_armable:
-            print("Waiting for drone to become armable...")
+            print "Waiting for drone to become armable..."
             time.sleep(1)
         
         # Passed all pre-flight checks.
-        print("Vehicle is now armable!")
+        print "Vehicle is now armable!"
 
     # Once armable, arm i.e. start motors.
-    print("Initiating arm stage...")
+    print "Initiating arm stage..."
     vehicle.armed = True
     while not vehicle.armed:
-        print("Waiting for drone to become armed...")
+        print "Waiting for drone to become armed..."
         time.sleep(1)
 	
-    print("Look out! Props are spinning!!")
+    print "Look out! Props are spinning!!"
     time.sleep(1)
     
     return None
@@ -73,13 +73,13 @@ def armDrone(vehicle):
 # flight mode and this method will enable it. 
 def setMode(vehicle, flightMode):
 
-    print("Entering", flightMode, "mode now...")
+    print "Entering", flightMode, "mode now..."
     
     vehicle.mode = VehicleMode(flightMode)
     while vehicle.mode != flightMode:
-        print("Waiting to enter", flightMode, "flight mode...")
+        print "Waiting to enter ", flightMode, " flight mode..."
         time.sleep(1)
-    print("Vehicle is now in", flightMode, "mode!!")   
+    print "Vehicle is now in", flightMode, " mode!!"   
 
     return vehicle
 # setMode()
@@ -120,14 +120,14 @@ def takeoff(vehicle, targetHeight):
         # +/- .5 meters is an acceptable range
         acceptableHeight = targetHeight * 0.95
         currHeight = vehicle.location.global_relative_frame.alt
-        print("Current Altitude: ", currHeight)
+        print "Current Altitude: ", currHeight
 
         # Once within an acceptable height, terminate
         if currHeight >= acceptableHeight:
             break
         time.sleep(1)
 
-    print("Target Altitude Reached!!")
+    print "Target Altitude Reached!!"
     time.sleep(5)
 
     return None
@@ -135,6 +135,8 @@ def takeoff(vehicle, targetHeight):
 
 
 
+# Capable of commanding the drone to rotate about the z-axis.
+# In order to use this method, you must first call it's initializer.
 def condition_yaw(vehicle, degrees, relative):
 
     # Establish the frame
@@ -147,19 +149,20 @@ def condition_yaw(vehicle, degrees, relative):
         0, 0,                                   #
         mavutil.mavlink.MAV_CMD_CONDITION_YAW,  #
         0,                                      #
-        degrees,
-        0,
-        1,
-        isRelative,
-        0, 0, 0
+        degrees,                                #
+        0,                                      #
+        1,                                      #
+        isRelative,                             #
+        0, 0, 0                                 #
     )
 
     vehicle.send_mavlink(msg)
     vehicle.flush()
+# condition_yaw()
 
 
 
-
+# Initializes the yaw condition above
 def yaw_init(vehicle):
 
     lat = vehicle.location.global_relative_frame.lat
@@ -185,12 +188,14 @@ def yaw_init(vehicle):
 
     vehicle.send_mavlink(msg)
     vehicle.flush()
+# yaw_init()
 
 
 
 
 
-# send velocity message (movement commands) in the drone's frame
+# Sends a velocity message in the drone's frame,
+# which allows movement commands to be simulated.
 def send_local_ned_velocity(vehicle, vx, vy, vz):
         
     # MAVLink message in the local/drone's frame, where forward is the drone's heading
@@ -211,7 +216,33 @@ def send_local_ned_velocity(vehicle, vx, vy, vz):
 
 
 
-# send velocity message (movement commands) in a global frame
+'''
+# TRY THIS ALTERNATIVE W/ THE BITMASK UPDATED!!! (COMMENT OUT THE ONE ABOVE)
+# Sends a velocity message in the drone's frame,
+# which allows movement commands to be simulated.
+def send_local_ned_velocity(vehicle, vx, vy, vz):
+        
+    # MAVLink message in the local/drone's frame, where forward is the drone's heading
+	msg = vehicle.message_factory.set_position_target_local_ned_encode(
+		0,                                          #
+		0, 0,                                       #
+		mavutil.mavlink.MAV_FRAME_BODY_OFFSET_NED,  # local frame
+		0b0000010111000111,                         # updated velocity bitmask
+		0, 0, 0,                                    # position
+		vx, vy, vz,                                 # velocity
+		0, 0, 0,                                    # acceleration
+		0, 0
+    )
+        
+	vehicle.send_mavlink(msg)
+	vehicle.flush()
+# send_local_ned_velocity()
+'''
+
+
+
+# Sends a velocity message in a global frame, 
+# which allows movement commands.
 def send_global_ned_velocity(vehicle, vx, vy, vz):
 
     # MAVLink message in the global frame, where forward is true North
@@ -244,80 +275,89 @@ def send_global_ned_velocity(vehicle, vx, vy, vz):
 
 
 # head north (+x), relative to drone
-def moveForward(vehicle):
+def moveForward(vehicle, velocity, duration):
     i = 0   # each iteration moves the drone
-    while (i < 12):
-        send_local_ned_velocity(vehicle, 1, 0, 0)
-        print("Moving forward now!")
-        time.sleep(1)
+    while (i < duration):
+        send_local_ned_velocity(vehicle, velocity, 0, 0)
+        print "Moving forward now!"
+        time.sleep(2)
         i += 1
 
 # head south (-x), relative to drone
-def moveBackwards(vehicle):
+def moveBackwards(vehicle, velocity, duration):
     i = 0   # each iteration moves the drone
-    while (i < 6):
-        send_local_ned_velocity(vehicle, -1, 0, 0)
-        print("Moving backwards now!")
-        time.sleep(1)
+    while (i < (duration/2)):
+        send_local_ned_velocity(vehicle, -velocity, 0, 0)
+        print "Moving backwards now!"
+        time.sleep(2)
         i += 1
 
 # head west (-y), relative to drone
-def moveLeft(vehicle):
+def moveLeft(vehicle, velocity, duration):
     i = 0   # each iteration moves the drone
-    while (i < 6):
-        send_local_ned_velocity(vehicle, 0, -1, 0)
-        print("Moving to the left, now!")
-        time.sleep(1)
+    while (i < (duration/2)):
+        send_local_ned_velocity(vehicle, 0, -velocity, 0)
+        print "Moving to the left, now!"
+        time.sleep(2)
         i += 1
 
 # head east (+y), relative to drone
-def moveRight(vehicle):
+def moveRight(vehicle, velocity, duration):
     i = 0   # each iteration moves the drone
-    while (i < 12):
-        send_local_ned_velocity(vehicle, 0, 1, 0)
-        print("Moving to the right, now!")
-        time.sleep(1)
+    while (i < duration):
+        send_local_ned_velocity(vehicle, 0, velocity, 0)
+        print "Moving to the right, now!"
+        time.sleep(2)
         i += 1
-    print("MISSION COMPLETE!!")
+    print "MISSION COMPLETE!!"
 
 
 
 # head north (+x), relative to Earth
-def moveForward_G(vehicle):
+def moveForward_G(vehicle, velocity, duration):
     i = 0   # each iteration moves the drone
-    while (i < 12):
-        send_global_ned_velocity(vehicle, 1, 0, 0)
-        print("Moving forward now!")
-        time.sleep(1)
+    while (i < duration):
+        send_global_ned_velocity(vehicle, velocity, 0, 0)
+        print "Moving forward now!"
+        time.sleep(2)
         i += 1
 
 # head south (-x), relative to Earth
-def moveBackwards_G(vehicle):
+def moveBackwards_G(vehicle, velocity, duration):
     i = 0   # each iteration moves the drone
-    while (i < 6):
-        send_global_ned_velocity(vehicle, -1, 0, 0)
-        print("Moving backwards now!")
-        time.sleep(1)
+    while (i < (duration/2)):
+        send_global_ned_velocity(vehicle, -velocity, 0, 0)
+        print "Moving backwards now!"
+        time.sleep(2)
         i += 1
 
 # head west (-y), relative to Earth
-def moveLeft_G(vehicle):
+def moveLeft_G(vehicle, velocity, duration):
     i = 0   # each iteration moves the drone
-    while (i < 6):
-        send_global_ned_velocity(vehicle, 0, -1, 0)
-        print("Moving to the left, now!")
-        time.sleep(1)
+    while (i < (duration/2)):
+        send_global_ned_velocity(vehicle, 0, -velocity, 0)
+        print "Moving to the left, now!"
+        time.sleep(2)
         i += 1
 
 # head east (+y), relative to Earth
-def moveRight_G(vehicle):
+def moveRight_G(vehicle, velocity, duration):
     i = 0   # each iteration moves the drone
-    while (i < 12):
-        send_global_ned_velocity(vehicle, 0, 1, 0)
-        print("Moving to the right, now!")
-        time.sleep(1)
+    while (i < duration):
+        send_global_ned_velocity(vehicle, 0, velocity, 0)
+        print "Moving to the right, now!"
+        time.sleep(2)
         i += 1
-    print("GLOBAL MISSION COMPLETE!!")
+    print "GLOBAL MISSION COMPLETE!!"
+
+
+
+
+
+
+
+
+
 
 ############# MAIN #############
 
@@ -352,17 +392,29 @@ if __name__=='__main__':
     setMode(vehicle, flightMode0)
 
     # in meters
-    desiredHeight = 10
+    desiredHeight = 5
+
+    desiredVelocity = 5
+
+    # Controls how long the movement lasts
+    # NOTE: Set even numbers for simplicity
+    desiredTravelDistance = 12
+
 
     # elevate and hover
     takeoff(vehicle, desiredHeight)
 
     # Cross maneuver in the local frame
+    moveForward(vehicle, desiredVelocity, desiredTravelDistance)
+    time.sleep(5)
+    moveBackwards(vehicle, desiredVelocity, desiredTravelDistance)
+    time.sleep(5)
+    moveLeft(vehicle, desiredVelocity, desiredTravelDistance)
+    time.sleep(5)
+    moveRight(vehicle, desiredVelocity, desiredTravelDistance)
+    time.sleep(5)
     '''
-    moveForward(vehicle)
-    moveBackwards(vehicle)
-    moveLeft(vehicle)
-    moveRight(vehicle)
+    
     '''
 
     # Now we try the same manuevers in the global frame
@@ -376,11 +428,16 @@ if __name__=='__main__':
     moveRight_G(vehicle)
     '''
 
+
+    '''
     # Trying yaw functionality
     print("Now entering the YAW function!!!!!")
     print("Now entering the YAW function!!!!!")
     print("Now entering the YAW function!!!!!")
+    
+    # Initialize the yaw method, then execute three maneuvers
     yaw_init(vehicle)
+
     condition_yaw(vehicle, 30, True)
     print('Yawing 30 degrees relative to current position!!!')
     time.sleep(7)
@@ -392,8 +449,10 @@ if __name__=='__main__':
     condition_yaw(vehicle, 270, False)
     print('Yawing true West!!!')
     time.sleep(7)
+    '''
+    
 
-    time.sleep(20)
+    time.sleep(5)
 
     # land the drone (and dont change altitude)
     vehicle.parameters['RTL_ALT'] = 0
