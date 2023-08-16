@@ -194,16 +194,17 @@ def yaw_init(vehicle):
 
 
 
-# Sends a velocity message in the drone's frame,
-# which allows movement commands to be simulated.
-def send_local_ned_velocity(vehicle, vx, vy, vz):
+# Sends a forward/backward velocity message in the drone's frame,
+# which allows movement commands to be simulated. 
+# Usage: +vx for forward and -vx for backward
+def forward_backwards_velocity(vehicle, vx, vy, vz):
         
     # MAVLink message in the local/drone's frame, where forward is the drone's heading
 	msg = vehicle.message_factory.set_position_target_local_ned_encode(
-		0,                                          #
-		0, 0,                                       #
-		mavutil.mavlink.MAV_FRAME_BODY_OFFSET_NED,  # local frame
-		0b0000111111000111,                         # velocity bitmask
+		0,                                          # time_boot_ms
+		0, 0,                                       # target_system, target_component
+		mavutil.mavlink.MAV_FRAME_BODY_OFFSET_NED,  # coord_frame (local here)
+		0b0000110111000111,                         # type_mask (decimal: 3527)
 		0, 0, 0,                                    # position
 		vx, vy, vz,                                 # velocity
 		0, 0, 0,                                    # acceleration
@@ -216,28 +217,26 @@ def send_local_ned_velocity(vehicle, vx, vy, vz):
 
 
 
-'''
-# TRY THIS ALTERNATIVE W/ THE BITMASK UPDATED!!! (COMMENT OUT THE ONE ABOVE)
-# Sends a velocity message in the drone's frame,
-# which allows movement commands to be simulated.
-def send_local_ned_velocity(vehicle, vx, vy, vz):
+# Sends a right/left velocity message in the drone's frame,
+# which allows movement commands to be simulated. 
+# Usage: +vy for right and -vx for left
+def side_to_side_velocity(vehicle, vx, vy, vz):
         
     # MAVLink message in the local/drone's frame, where forward is the drone's heading
 	msg = vehicle.message_factory.set_position_target_local_ned_encode(
-		0,                                          #
-		0, 0,                                       #
-		mavutil.mavlink.MAV_FRAME_BODY_OFFSET_NED,  # local frame
-		0b0000010111000111,                         # updated velocity bitmask
+		0,                                          # time_boot_ms
+		0, 0,                                       # target_system, target_component
+		mavutil.mavlink.MAV_FRAME_BODY_OFFSET_NED,  # coord_frame (local here)
+		0b0000010111000111,                         # type_mask (decimal: 1479)
 		0, 0, 0,                                    # position
 		vx, vy, vz,                                 # velocity
 		0, 0, 0,                                    # acceleration
-		0, 0
+		0, 0                                        # yaw, yaw_rate
     )
         
 	vehicle.send_mavlink(msg)
 	vehicle.flush()
 # send_local_ned_velocity()
-'''
 
 
 
@@ -278,7 +277,7 @@ def send_global_ned_velocity(vehicle, vx, vy, vz):
 def moveForward(vehicle, velocity, duration):
     i = 0   # each iteration moves the drone
     while (i < duration):
-        send_local_ned_velocity(vehicle, velocity, 0, 0)
+        forward_backwards_velocity(vehicle, velocity, 0, 0)
         print "Moving forward now!"
         time.sleep(2)
         i += 1
@@ -287,7 +286,7 @@ def moveForward(vehicle, velocity, duration):
 def moveBackwards(vehicle, velocity, duration):
     i = 0   # each iteration moves the drone
     while (i < (duration/2)):
-        send_local_ned_velocity(vehicle, -velocity, 0, 0)
+        forward_backwards_velocity(vehicle, -velocity, 0, 0)
         print "Moving backwards now!"
         time.sleep(2)
         i += 1
@@ -296,7 +295,7 @@ def moveBackwards(vehicle, velocity, duration):
 def moveLeft(vehicle, velocity, duration):
     i = 0   # each iteration moves the drone
     while (i < (duration/2)):
-        send_local_ned_velocity(vehicle, 0, -velocity, 0)
+        side_to_side_velocity(vehicle, 0, -velocity, 0)
         print "Moving to the left, now!"
         time.sleep(2)
         i += 1
@@ -305,11 +304,17 @@ def moveLeft(vehicle, velocity, duration):
 def moveRight(vehicle, velocity, duration):
     i = 0   # each iteration moves the drone
     while (i < duration):
-        send_local_ned_velocity(vehicle, 0, velocity, 0)
+        side_to_side_velocity(vehicle, 0, velocity, 0)
         print "Moving to the right, now!"
         time.sleep(2)
         i += 1
     print "MISSION COMPLETE!!"
+
+
+
+
+
+
 
 
 
@@ -350,6 +355,22 @@ def moveRight_G(vehicle, velocity, duration):
         i += 1
     print "GLOBAL MISSION COMPLETE!!"
 
+
+
+
+
+def cross_maneuver(vehicle, velocity, duration):
+    
+    print "Performing Cross Maneuver now..."
+
+    moveForward(vehicle, velocity, duration)
+    time.sleep(5)
+    moveBackwards(vehicle, velocity, duration)
+    time.sleep(5)
+    moveLeft(vehicle, velocity, duration)
+    time.sleep(5)
+    moveRight(vehicle, velocity, duration)
+    time.sleep(5)
 
 
 
@@ -405,14 +426,7 @@ if __name__=='__main__':
     takeoff(vehicle, desiredHeight)
 
     # Cross maneuver in the local frame
-    moveForward(vehicle, desiredVelocity, desiredTravelDistance)
-    time.sleep(5)
-    moveBackwards(vehicle, desiredVelocity, desiredTravelDistance)
-    time.sleep(5)
-    moveLeft(vehicle, desiredVelocity, desiredTravelDistance)
-    time.sleep(5)
-    moveRight(vehicle, desiredVelocity, desiredTravelDistance)
-    time.sleep(5)
+    cross_maneuver(vehicle, desiredVelocity, desiredTravelDistance)
     '''
     
     '''
