@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python 
 
 
   #########################################
@@ -192,10 +192,15 @@ def yaw_init(vehicle):
 
 
 
+#*********************************************************************************
+# NOTE: THE NEXT TWO F(X)S HAVE THE MOST UP-TO-DATE VELOCITY F(X)S THAT WORK! THEY 
+#       HAVE BEEN TESTED, SO USE THEM IN ALL SUBSEQUENT SCRIPTS.
+#*********************************************************************************
 
 
 # Sends a forward/backward velocity message in the drone's frame,
-# which allows movement commands to be simulated. 
+# which allows movement commands to be simulated. It enables yaw, but
+# sets its rate (yaw_rate) to zero so that it doesnt yaw.
 # Usage: +vx for forward and -vx for backward
 def forward_backwards_velocity(vehicle, vx, vy, vz):
         
@@ -204,7 +209,7 @@ def forward_backwards_velocity(vehicle, vx, vy, vz):
 		0,                                          # time_boot_ms
 		0, 0,                                       # target_system, target_component
 		mavutil.mavlink.MAV_FRAME_BODY_OFFSET_NED,  # coord_frame (local here)
-		0b0000110111000111,                         # type_mask (decimal: 3527)
+		0b010111000111,                             # type_mask (decimal: 1479)
 		0, 0, 0,                                    # position
 		vx, vy, vz,                                 # velocity
 		0, 0, 0,                                    # acceleration
@@ -218,7 +223,8 @@ def forward_backwards_velocity(vehicle, vx, vy, vz):
 
 
 # Sends a right/left velocity message in the drone's frame,
-# which allows movement commands to be simulated. 
+# which allows movement commands to be simulated. It enables yaw, but
+# sets its rate (yaw_rate) to zero so that it doesnt yaw.
 # Usage: +vy for right and -vx for left
 def side_to_side_velocity(vehicle, vx, vy, vz):
         
@@ -227,7 +233,7 @@ def side_to_side_velocity(vehicle, vx, vy, vz):
 		0,                                          # time_boot_ms
 		0, 0,                                       # target_system, target_component
 		mavutil.mavlink.MAV_FRAME_BODY_OFFSET_NED,  # coord_frame (local here)
-		0b0000010111000111,                         # type_mask (decimal: 1479)
+		0b010111000111,                             # type_mask (decimal: 1479)
 		0, 0, 0,                                    # position
 		vx, vy, vz,                                 # velocity
 		0, 0, 0,                                    # acceleration
@@ -237,6 +243,14 @@ def side_to_side_velocity(vehicle, vx, vy, vz):
 	vehicle.send_mavlink(msg)
 	vehicle.flush()
 # send_local_ned_velocity()
+
+
+
+#*********************************************************************************
+# NOTE: THE ABOVE TWO F(X)S HAVE THE MOST UP-TO-DATE VELOCITY F(X)S THAT WORK! THEY 
+#       HAVE BEEN TESTED, SO USE THEM IN ALL SUBSEQUENT SCRIPTS.
+#*********************************************************************************
+
 
 
 
@@ -285,10 +299,8 @@ def moveForward(vehicle, velocity, duration):
 # head south (-x), relative to drone
 def moveBackwards(vehicle, velocity, duration):
     i = 0   # each iteration moves the drone
-    velocity = (-1 * velocity)
-    print "I am going", velocity, "mph now..."
     while (i < duration):
-        forward_backwards_velocity(vehicle, velocity, 0, 0)
+        forward_backwards_velocity(vehicle, -velocity, 0, 0)
         print "Moving backwards now!"
         time.sleep(2)
         i += 1
@@ -361,18 +373,33 @@ def moveRight_G(vehicle, velocity, duration):
 
 
 
+
+
+
+
 def cross_maneuver(vehicle, velocity, duration):
     
     print "Performing Cross Maneuver now..."
 
+    print "Moving forward for", duration, "seconds"
     moveForward(vehicle, velocity, duration)
     time.sleep(5)
-    moveBackwards(vehicle, velocity, duration)
+
+    backwardsDuration = duration/2
+    print "Now, I will move backwards for", backwardsDuration, "seconds"
+    moveBackwards(vehicle, velocity, backwardsDuration)
     time.sleep(5)
-    moveLeft(vehicle, velocity, duration)
+
+    leftDuration = backwardsDuration
+    print "Now, I will roll left for", leftDuration, "seconds"
+    moveLeft(vehicle, velocity, leftDuration)
     time.sleep(5)
+
+    print "To complete the cross, I will roll right for", duration, "seconds"
     moveRight(vehicle, velocity, duration)
     time.sleep(5)
+
+    print "CROSS MANEUVER MISSION COMPLETE!!!! Getting ready to head home now..."
 
 
 
@@ -442,19 +469,16 @@ if __name__=='__main__':
 
     # Controls how long the movement lasts
     # NOTE: Set even numbers for simplicity
-    desiredTravelDistance = 6
+    desiredTravelDistance = 4
 
 
     # elevate and hover
     takeoff(vehicle, desiredHeight)
 
-    move_forward_then_backwards(vehicle, desiredVelocity, desiredTravelDistance)
+    #move_forward_then_backwards(vehicle, desiredVelocity, desiredTravelDistance)
 
-    
-    '''
     # Cross maneuver in the local frame
     cross_maneuver(vehicle, desiredVelocity, desiredTravelDistance)
-    '''
 
     # Now we try the same manuevers in the global frame
     '''
