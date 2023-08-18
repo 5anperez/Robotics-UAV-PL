@@ -1,9 +1,8 @@
 #!/usr/bin/python 
 
-
-  #########################################
-################## IMPORTS ##################
-  #########################################
+  ##############################################
+################## DEPENDENCIES ##################
+  ##############################################
 
 import time
 import socket
@@ -297,7 +296,7 @@ if __name__=='__main__':
     setMode(vehicle, flightMode0)
 
     desiredHeight = 2       # in meters
-    desiredVelocity = 2     # cm/s
+    desiredVelocity = 2     # m/s
 
     # Controls how long the movement lasts
     # NOTE: Set even numbers for simplicity
