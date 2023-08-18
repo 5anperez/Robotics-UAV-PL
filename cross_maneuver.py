@@ -158,16 +158,16 @@ def send_local_ned_velocity(vehicle, vx, vy, vz):
 
 
 
-# NOTE: velocity commands must be resent every one second to keep
-# the drone in constant motion. sending one velocity message will
-# only move the drone for one second.
+# NOTE: Velocity commands must be resent every one second to keep
+#       the drone in constant motion. Sending one velocity message 
+#       will only move the drone for one second.
 
 
-# NOTE: if 'RNG' in the SITL console is greyed out, then it hasnt
-# been enabled! to enable, do: 
-#           param set RNGFND1_TYPE 100
-#           reboot
-# in the terminal running MAVProxy. it should turn green
+# NOTE: If 'RNG' in the SITL console is greyed out, then it hasnt
+#       been enabled! To enable, do these two things: 
+#           1. param set RNGFND1_TYPE 100
+#           2. reboot
+#       Now, in the MAVProxy console, it should turn green
 
 
 # Head north (+x), relative to drone
@@ -176,7 +176,7 @@ def moveForward(vehicle, velocity, duration):
     while (i < duration):
         send_local_ned_velocity(vehicle, velocity, 0, 0)
         print "Moving forward now!"
-        time.sleep(2)
+        time.sleep(1)
         i += 1
 
 # Head south (-x), relative to drone
@@ -185,7 +185,7 @@ def moveBackwards(vehicle, velocity, duration):
     while (i < duration):
         send_local_ned_velocity(vehicle, -velocity, 0, 0)
         print "Moving backwards now!"
-        time.sleep(2)
+        time.sleep(1)
         i += 1
 
 # Head west (-y), relative to drone
@@ -194,7 +194,7 @@ def moveLeft(vehicle, velocity, duration):
     while (i < duration):
         send_local_ned_velocity(vehicle, 0, -velocity, 0)
         print "Moving to the left, now!"
-        time.sleep(2)
+        time.sleep(1)
         i += 1
 
 # Head east (+y), relative to drone
@@ -203,7 +203,7 @@ def moveRight(vehicle, velocity, duration):
     while (i < duration):
         send_local_ned_velocity(vehicle, 0, velocity, 0)
         print "Moving to the right, now!"
-        time.sleep(2)
+        time.sleep(1)
         i += 1
 
 
