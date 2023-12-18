@@ -50,11 +50,11 @@ if __name__ == '__main__':
     pattern_size = (9, 6)
 
     # Create numpy arrays to hold the real-world 3d points of the 
-    # checker board pattern. First, a pattern_size x 3 2D array of 
+    # checker board pattern. First, a (pattern_size x 3) 2D array of 
     # floats is init., which is a (9*6) x 3 = 54 x 3 2D array. 
     # Then, we slice out the first two cols (x,y) and transpose, 
-    # then reshape to get a 54x3 array where each cell is a coordinate 
-    # i.e., (0,0), (1,0), ..., (8,5) representing the 9x6 chessboard. 
+    # then reshape to get a 54x3 array where each row is a coordinate 
+    # i.e., (0,0), (1,0), ..., (8,5) the col-1 is the x and col-2 is the y. 
     pattern_points = np.zeros((np.prod(pattern_size), 3), np.float32)
     pattern_points[:, :2] = np.indices(pattern_size).T.reshape(-1, 2)
     # pattern_points *= square_size
@@ -66,8 +66,8 @@ if __name__ == '__main__':
 
     # Set dimensions
     h, w = args.height, args.width
-    source.set(cv2.CAP_PROP_FRAME_HEIGHT,h)
-    source.set(cv2.CAP_PROP_FRAME_WIDTH,w)
+    source.set(cv2.CAP_PROP_FRAME_HEIGHT, h)
+    source.set(cv2.CAP_PROP_FRAME_WIDTH, w)
     
     i = -1
     image_count = 0

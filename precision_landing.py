@@ -42,13 +42,9 @@ parameters = aruco.DetectorParameters_create()
 horizontal_res = 640
 vertical_res = 480
 
-'''
-Here, src=0 tells the WebcamVideoStream to capture frames from the default camera (usually the built-in webcam on a laptop or the first camera connected to a desktop).
-
-The advantage of using WebcamVideoStream in imutils rather than OpenCV's cv2.VideoCapture directly is that WebcamVideoStream uses a separate thread to capture frames, allowing your main thread to process frames without waiting for the next frame to be captured. This can lead to a smoother, more responsive video stream, particularly when performing more complex processing on each frame.
-'''
-
-# imutils object to capture the video stream in a seperate thread
+# imutils wrapper object, which is essentially cv2.VideoCapture, but this 
+# library provides a threaded wrapper for more efficient frame capture. 
+# src=0 grabs the first available camera and start begins the threaded vid cap.
 cap = WebcamVideoStream(src=0, width=horizontal_res, height=vertical_res).start()
 
 # Field of view for picam v2
@@ -275,17 +271,58 @@ def lander(vehicle):
         first_run=1
         start_time=time.time()
         
+    
+    # Captures a single frame w/out the preceding bool
     frame = cap.read()
-    frame = cv2.resize(frame,(horizontal_res,vertical_res))
+
+    ''' TEST THIS WHEN YOU GET A CHANCE!!! '''
+    # Check the type for redundancy. If the output is 
+    # <class 'numpy.ndarray'>, then the frame is already a NumPy array.
+    print(type(frame))
+
+
+    ''' TEST THIS WHEN YOU GET A CHANCE!!! '''
+    # Check the resolution of the captured frame to see if 
+    # it matches the desired resolution. The shape of the 
+    # frame should be in the format (height, width, channels).
+    # If the height and width match vertical_res and 
+    # horizontal_res, respectively, then the resizing step is not needed.
+    print(frame.shape)
+
+
+    # This might be redundant since we already set this, 
+    # or it might can act as a safegaurd to ensure its set.
+    frame = cv2.resize(frame, (horizontal_res, vertical_res))
+
+    # This might be redundant if the imutil and/or OpenCV 
+    # are already NumPy arrays. To check, we will just 
+    # print its data type after capturing a frame.
     frame_np = np.array(frame)
+
     
-    gray_img = cv2.cvtColor(frame_np,cv2.COLOR_BGR2GRAY)
+    # Convert the frame from BGR to grayscale for marker detection.
+    gray_img = cv2.cvtColor(frame_np, cv2.COLOR_BGR2GRAY)
+
+    '''
+        Parameters like adaptiveThreshWinSizeMin, adaptiveThreshWinSizeMax, 
+        and adaptiveThreshWinSizeStep control the window size and parameters 
+        for this adaptive process.
+
+        You can control how strictly the detector adheres to the expected marker size.
+        minMarkerPerimeterRate and maxMarkerPerimeterRate set the allowable range of 
+        marker perimeter sizes relative to the image size.
+    '''
     
-    ids=''
-    corners, ids, rejected = aruco.detectMarkers(image=gray_img, dictionary=aruco_dict, parameters=parameters)
+    # Detects ArUco markers in the grayscale image. 
+    ids='' # This is probably redundant as well
+    corners, ids, rejected = aruco.detectMarkers(image=gray_img, 
+                                                 dictionary=aruco_dict, 
+                                                 parameters=parameters)
     
     # Enable regular land mode
     # IDK WHAT THIS IS NEEDED FOR?!?!?
+    # WE SHOULDNT BE TRYING TO LAND HERE!!
+    # ITS PROB A DUMMY PLACEHOLDER LOL
     '''
     if vehicle.mode != 'LAND':
 
@@ -300,13 +337,32 @@ def lander(vehicle):
     # Begin image processing
     try:
 
-        # Check for the ArUco of interest (ArUco id: 72)
+        # Check for the ArUco of interest (ArUco ID: 72)
         if ids is not None and ids[0] == id_to_find:
 
-            ret = aruco.estimatePoseSingleMarkers(corners, marker_size, 
-                                                  cameraMatrix = cameraMatrix,
-                                                  distCoeffs = cameraDistortion)
+            # Estimates the 3D pose (rotation and translation) of the 
+            # detected marker using camera calibration parameters 
+            # (matrix and distortion) and the marker size. Another 
+            # way to say rotation and translation is position and 
+            # orientation.
+            ret = aruco.estimatePoseSingleMarkers(corners, marker_size,             # positions of the markers corners in the img.
+                                                  cameraMatrix = cameraMatrix,      # 3x3 intrinsic calibration matrix.
+                                                  distCoeffs = cameraDistortion)    # distortion coefficients for the lens.
             
+
+            ''' 
+                The slicing [0, 0, :] accesses the first rotation vector. 
+                
+                The first 0 accesses the first set of rotation vectors 
+                (assuming there could be multiple), the second 0 accesses 
+                the first rotation vector within this set, and : selects 
+                all the elements of this vector (all components of the 
+                rotation vector).
+            '''
+
+            # Extracts the rotation vector (rvec) and translation vector 
+            # (tvec) from the pose estimation results. Then, formats the 
+            # position values as strings with two decimal places.
             (rvec, tvec) = (ret[0][0, 0, :], ret[1][0, 0, :])
             x = '{:.2f}'.format(tvec[0])
             y = '{:.2f}'.format(tvec[1])
@@ -321,8 +377,8 @@ def lander(vehicle):
             x_avg = x_sum*.25
             y_avg = y_sum*.25
             
-            x_ang = (x_avg - horizontal_res*.5)*(horizontal_fov/horizontal_res)
-            y_ang = (y_avg - vertical_res*.5)*(vertical_fov/vertical_res)
+            x_ang = (x_avg - horizontal_res * .5) * (horizontal_fov / horizontal_res)
+            y_ang = (y_avg - vertical_res * .5) * (vertical_fov / vertical_res)
             
             # Perform precision land w/ MAVLink msg
             if vehicle.mode != 'LAND':
